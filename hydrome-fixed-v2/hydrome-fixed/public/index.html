@@ -1,0 +1,1087 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#00d4ff">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="HydroMe">
+<link rel="manifest" href="/manifest.json">
+<link rel="apple-touch-icon" href="/icon-192.png">
+<title>HydroMe – Water Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Nunito:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #060d1a;
+  --bg2: #0b1628;
+  --surface: #0f1e35;
+  --surface2: #152540;
+  --border: #1e3555;
+  --aqua: #00d4ff;
+  --aqua2: #26e8c8;
+  --aqua-dim: rgba(0,212,255,0.12);
+  --water: #0096c7;
+  --water2: #48cae4;
+  --text: #e8f4fd;
+  --text-dim: #7a9abb;
+  --accent: #ff6b6b;
+  --gold: #ffd166;
+  --safe-top: env(safe-area-inset-top);
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Nunito', sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background:
+    radial-gradient(ellipse 70% 50% at 15% 85%, rgba(0,150,199,0.13) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 40% at 85% 15%, rgba(38,232,200,0.08) 0%, transparent 55%);
+  pointer-events: none; z-index: 0;
+}
+
+.screen { display: none; position: relative; z-index: 1; }
+.screen.active { display: block; }
+
+/* ===== ONBOARDING ===== */
+#onboarding {
+  min-height: 100vh;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: calc(1.5rem + var(--safe-top)) 1.25rem 2rem;
+}
+#onboarding.active { display: flex; }
+
+.onboard-logo {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 4rem; letter-spacing: 6px;
+  color: var(--aqua);
+  text-shadow: 0 0 50px rgba(0,212,255,0.5), 0 0 100px rgba(0,212,255,0.2);
+  line-height: 1; margin-bottom: 0.15rem;
+}
+.onboard-droplets { display: flex; gap: 6px; margin-bottom: 2.5rem; justify-content: center; }
+.onboard-droplets span {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--aqua); opacity: 0.4;
+  animation: pulse 1.8s ease-in-out infinite;
+}
+.onboard-droplets span:nth-child(2) { animation-delay: 0.3s; }
+.onboard-droplets span:nth-child(3) { animation-delay: 0.6s; }
+@keyframes pulse { 0%,100%{opacity:0.4;transform:scale(1)} 50%{opacity:1;transform:scale(1.4)} }
+
+.onboard-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 28px; padding: 2.5rem 2rem;
+  width: 100%; max-width: 440px;
+  box-shadow: 0 0 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(0,212,255,0.04);
+}
+.step-label { font-size: 0.7rem; letter-spacing: 3px; text-transform: uppercase; color: var(--aqua); margin-bottom: 0.3rem; font-weight: 700; }
+.step-title { font-size: 1.5rem; font-weight: 900; margin-bottom: 2rem; }
+
+.gender-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+.gender-btn {
+  background: var(--surface2); border: 2px solid var(--border);
+  border-radius: 18px; padding: 1.5rem 1rem; cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.34,1.56,0.64,1);
+  display: flex; flex-direction: column; align-items: center; gap: 0.75rem;
+  color: var(--text-dim); font-family: 'Nunito', sans-serif;
+  font-weight: 800; font-size: 1rem;
+}
+.gender-btn:hover { border-color: var(--aqua); color: var(--text); transform: translateY(-2px); }
+.gender-btn.selected { border-color: var(--aqua); background: var(--aqua-dim); color: var(--aqua); box-shadow: 0 0 25px rgba(0,212,255,0.2); transform: translateY(-2px); }
+.gender-icon { font-size: 2.75rem; line-height: 1; }
+
+.form-group { margin-bottom: 1.375rem; }
+.form-label { font-size: 0.72rem; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-dim); margin-bottom: 0.5rem; display: block; font-weight: 800; }
+.form-input {
+  width: 100%; background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 14px; padding: 0.875rem 1rem; color: var(--text);
+  font-family: 'Nunito', sans-serif; font-size: 1rem; font-weight: 700;
+  outline: none; transition: border-color 0.2s, box-shadow 0.2s; -webkit-appearance: none;
+}
+.form-input:focus { border-color: var(--aqua); box-shadow: 0 0 0 3px rgba(0,212,255,0.1); }
+.form-input::placeholder { color: var(--text-dim); font-weight: 400; }
+
+.goal-presets { display: flex; gap: 0.5rem; margin-top: 0.625rem; flex-wrap: wrap; }
+.goal-preset {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 8px; padding: 0.35rem 0.75rem;
+  font-size: 0.78rem; font-weight: 800; color: var(--text-dim);
+  cursor: pointer; font-family: 'Nunito', sans-serif; transition: all 0.15s;
+}
+.goal-preset:hover { border-color: var(--aqua); color: var(--aqua); background: var(--aqua-dim); }
+
+.reminder-options { display: flex; gap: 0.625rem; }
+.reminder-opt {
+  flex: 1; background: var(--surface2); border: 2px solid var(--border);
+  border-radius: 12px; padding: 0.75rem 0.5rem; text-align: center;
+  cursor: pointer; font-family: 'Nunito', sans-serif;
+  font-weight: 800; font-size: 0.82rem; color: var(--text-dim); transition: all 0.2s;
+}
+.reminder-opt:hover { border-color: var(--aqua); color: var(--text); }
+.reminder-opt.selected { border-color: var(--aqua); background: var(--aqua-dim); color: var(--aqua); }
+
+.btn-start {
+  width: 100%; margin-top: 1.75rem;
+  background: linear-gradient(135deg, #00d4ff, #26e8c8);
+  border: none; border-radius: 16px; padding: 1.1rem;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.35rem; letter-spacing: 4px; color: #040c18;
+  cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;
+  box-shadow: 0 5px 25px rgba(0,212,255,0.35);
+}
+.btn-start:hover { transform: translateY(-3px); box-shadow: 0 10px 35px rgba(0,212,255,0.45); }
+
+/* ===== INSTALL BANNER ===== */
+.install-banner {
+  background: linear-gradient(135deg, rgba(0,212,255,0.1), rgba(38,232,200,0.08));
+  border: 1px solid rgba(0,212,255,0.3); border-radius: 16px;
+  padding: 1rem 1.25rem; margin-bottom: 1.25rem;
+  display: flex; align-items: center; justify-content: space-between; gap: 0.75rem;
+  animation: slideIn 0.4s ease;
+}
+.install-banner.hidden { display: none; }
+.install-banner-text { flex: 1; }
+.install-banner-text strong { font-size: 0.85rem; color: var(--aqua); display: block; }
+.install-banner-text span { font-size: 0.72rem; color: var(--text-dim); }
+.btn-install {
+  background: linear-gradient(135deg, var(--aqua), var(--aqua2));
+  border: none; border-radius: 10px; padding: 0.5rem 1rem;
+  font-family: 'Bebas Neue', sans-serif; font-size: 1rem; letter-spacing: 2px;
+  color: #040c18; cursor: pointer; white-space: nowrap;
+}
+.btn-close-banner {
+  background: none; border: none; color: var(--text-dim); cursor: pointer; font-size: 1.1rem; padding: 0.25rem;
+}
+
+/* ===== MAIN APP ===== */
+#app {
+  max-width: 480px; margin: 0 auto;
+  padding: calc(1.5rem + var(--safe-top)) 1rem 7rem;
+}
+
+.topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; padding: 0 0.25rem; }
+.topbar-left h1 { font-family: 'Bebas Neue', sans-serif; font-size: 1.6rem; letter-spacing: 3px; color: var(--aqua); line-height: 1; }
+.topbar-left p { font-size: 0.72rem; color: var(--text-dim); margin-top: 3px; }
+.streak-badge { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 0.5rem 1rem; text-align: center; }
+.streak-num { font-family: 'Bebas Neue', sans-serif; font-size: 1.6rem; color: var(--gold); line-height: 1; }
+.streak-label { font-size: 0.62rem; color: var(--text-dim); letter-spacing: 1px; text-transform: uppercase; }
+
+.main-visual { display: flex; align-items: flex-start; gap: 1.25rem; margin-bottom: 1.375rem; }
+.body-container { flex-shrink: 0; position: relative; }
+.body-svg { width: 140px; height: auto; display: block; filter: drop-shadow(0 0 20px rgba(0,150,199,0.25)); }
+
+@keyframes waveFlow { 0% { transform: translateX(0); } 100% { transform: translateX(-120px); } }
+.wave-anim { animation: waveFlow 2.5s linear infinite; }
+.water-fill-rect { transition: y 0.9s cubic-bezier(0.25, 0.46, 0.45, 0.94), height 0.9s cubic-bezier(0.25, 0.46, 0.45, 0.94); }
+
+.stats-panel { flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 0.625rem; padding-top: 0.25rem; align-content: start; }
+.stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 0.875rem 0.875rem 0.75rem; }
+.stat-value { font-family: 'Bebas Neue', sans-serif; font-size: 1.5rem; color: var(--aqua); line-height: 1; }
+.stat-label { font-size: 0.64rem; color: var(--text-dim); letter-spacing: 0.5px; text-transform: uppercase; margin-top: 3px; }
+
+.progress-section { background: var(--surface); border: 1px solid var(--border); border-radius: 18px; padding: 1.25rem 1.375rem; margin-bottom: 1.375rem; }
+.progress-top { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.625rem; }
+.progress-title { font-size: 0.7rem; letter-spacing: 2px; text-transform: uppercase; color: var(--text-dim); font-weight: 800; }
+.pct-label { font-family: 'Bebas Neue', sans-serif; font-size: 1.6rem; color: var(--aqua); transition: all 0.4s ease; }
+.progress-bar-wrap { background: var(--surface2); border-radius: 100px; height: 10px; overflow: hidden; border: 1px solid var(--border); }
+.progress-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #0077b6, #00b4d8, #48cae4, #26e8c8);
+  border-radius: 100px; transition: width 0.8s cubic-bezier(0.34,1.2,0.64,1);
+  box-shadow: 0 0 12px rgba(0,212,255,0.5);
+  background-size: 200% 100%;
+  animation: shimmer 3s ease infinite;
+}
+@keyframes shimmer { 0%,100%{background-position:0% 0%} 50%{background-position:100% 0%} }
+.progress-footer { display: flex; justify-content: space-between; margin-top: 0.5rem; }
+.progress-footer span { font-size: 0.72rem; color: var(--text-dim); }
+
+.goal-complete { background: linear-gradient(135deg, rgba(38,232,200,0.1), rgba(0,212,255,0.1)); border: 1px solid rgba(38,232,200,0.4); border-radius: 14px; padding: 1rem 1.25rem; text-align: center; margin-bottom: 1.375rem; display: none; animation: bounceIn 0.5s cubic-bezier(0.34,1.56,0.64,1); }
+.goal-complete.visible { display: block; }
+@keyframes bounceIn { from{transform:scale(0.9);opacity:0} to{transform:scale(1);opacity:1} }
+.goal-complete-title { font-family: 'Bebas Neue', sans-serif; font-size: 1.3rem; color: var(--aqua2); letter-spacing: 3px; }
+.goal-complete p { font-size: 0.78rem; color: var(--text-dim); margin-top: 4px; }
+
+.section-title { font-size: 0.68rem; letter-spacing: 3px; text-transform: uppercase; color: var(--text-dim); margin-bottom: 0.75rem; font-weight: 800; }
+
+.quick-add-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.625rem; margin-bottom: 0.75rem; }
+.quick-btn {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 14px; padding: 0.875rem 0.25rem; text-align: center;
+  cursor: pointer; transition: all 0.18s cubic-bezier(0.34,1.56,0.64,1);
+  font-family: 'Nunito', sans-serif;
+}
+.quick-btn:hover { border-color: var(--aqua); background: var(--aqua-dim); transform: translateY(-3px); box-shadow: 0 5px 15px rgba(0,212,255,0.15); }
+.qb-icon { font-size: 1.3rem; display: block; margin-bottom: 0.3rem; }
+.qb-amount { font-family: 'Bebas Neue', sans-serif; font-size: 1.15rem; color: var(--aqua); line-height: 1; display: block; }
+.qb-unit { font-size: 0.62rem; color: var(--text-dim); display: block; margin-top: 1px; }
+
+.custom-add-row { display: flex; gap: 0.625rem; margin-bottom: 1.5rem; }
+.custom-input {
+  flex: 1; background: var(--surface); border: 1px solid var(--border);
+  border-radius: 12px; padding: 0.8rem 1rem;
+  color: var(--text); font-family: 'Nunito', sans-serif;
+  font-size: 1rem; font-weight: 700; outline: none;
+  transition: border-color 0.2s; -webkit-appearance: none;
+}
+.custom-input:focus { border-color: var(--aqua); box-shadow: 0 0 0 3px rgba(0,212,255,0.08); }
+.custom-input::placeholder { color: var(--text-dim); font-weight: 400; }
+.btn-add {
+  background: linear-gradient(135deg, var(--aqua), var(--aqua2));
+  border: none; border-radius: 12px; padding: 0.8rem 1.25rem;
+  font-family: 'Bebas Neue', sans-serif; font-size: 1.1rem;
+  letter-spacing: 2px; color: #040c18; cursor: pointer;
+  white-space: nowrap; transition: all 0.18s; box-shadow: 0 3px 15px rgba(0,212,255,0.3);
+}
+
+/* Reminder card */
+.reminder-card { background: var(--surface); border: 1px solid var(--border); border-radius: 18px; padding: 1.125rem 1.25rem; margin-bottom: 1.5rem; }
+.reminder-card-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem; }
+.reminder-info h3 { font-size: 0.9rem; font-weight: 900; margin-bottom: 0.2rem; }
+.reminder-info p { font-size: 0.72rem; color: var(--text-dim); }
+.reminder-interval-row { display: flex; gap: 0.5rem; align-items: center; }
+.rem-interval-btn {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 8px; padding: 0.4rem 0.875rem;
+  font-size: 0.75rem; font-weight: 900; color: var(--text-dim);
+  cursor: pointer; font-family: 'Nunito', sans-serif; transition: all 0.15s;
+}
+.rem-interval-btn.active { background: var(--aqua-dim); border-color: var(--aqua); color: var(--aqua); }
+
+/* Toggle */
+.toggle { position: relative; width: 46px; height: 26px; }
+.toggle input { opacity: 0; width: 0; height: 0; }
+.toggle-slider { position: absolute; inset: 0; background: var(--surface2); border-radius: 100px; border: 1px solid var(--border); cursor: pointer; transition: 0.3s; }
+.toggle-slider::before { content: ''; position: absolute; width: 19px; height: 19px; left: 3px; top: 50%; transform: translateY(-50%); background: var(--text-dim); border-radius: 50%; transition: 0.3s; }
+.toggle input:checked + .toggle-slider { background: rgba(0,212,255,0.2); border-color: var(--aqua); }
+.toggle input:checked + .toggle-slider::before { transform: translateX(20px) translateY(-50%); background: var(--aqua); }
+
+/* Log */
+.log-list { display: flex; flex-direction: column; gap: 0.5rem; }
+.log-entry {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 13px; padding: 0.75rem 1rem;
+  display: flex; align-items: center; justify-content: space-between;
+  animation: slideIn 0.3s ease;
+}
+@keyframes slideIn { from{opacity:0;transform:translateX(-12px)} to{opacity:1;transform:translateX(0)} }
+.log-left { display: flex; align-items: center; gap: 0.75rem; }
+.log-icon { font-size: 1.3rem; }
+.log-time { font-size: 0.72rem; color: var(--text-dim); }
+.log-right { display: flex; align-items: center; gap: 0.5rem; }
+.log-amount { font-family: 'Bebas Neue', sans-serif; font-size: 1.25rem; color: var(--aqua2); }
+.log-ml { font-size: 0.68rem; color: var(--text-dim); }
+.log-delete { background: none; border: none; color: var(--text-dim); cursor: pointer; font-size: 0.85rem; padding: 0.25rem 0.375rem; border-radius: 6px; transition: all 0.15s; }
+.log-delete:hover { color: var(--accent); background: rgba(255,107,107,0.1); }
+.empty-log { text-align: center; padding: 2.5rem 1rem; color: var(--text-dim); font-size: 0.875rem; }
+.empty-log-icon { font-size: 2.5rem; display: block; margin-bottom: 0.625rem; }
+
+/* Toast */
+.toast {
+  position: fixed; top: max(1.25rem, var(--safe-top)); left: 50%;
+  transform: translateX(-50%) translateY(-90px);
+  background: linear-gradient(135deg, #0f2a45, #0c2040);
+  border: 1px solid rgba(0,212,255,0.5); border-radius: 14px;
+  padding: 0.75rem 1.5rem; font-weight: 800; font-size: 0.875rem;
+  color: var(--text); box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+  z-index: 9999; transition: transform 0.35s cubic-bezier(0.34,1.56,0.64,1);
+  white-space: nowrap; max-width: 90vw; text-align: center;
+}
+.toast.show { transform: translateX(-50%) translateY(0); }
+
+/* Settings FAB */
+.btn-settings {
+  position: fixed; bottom: max(1.75rem, env(safe-area-inset-bottom)); right: 1.5rem;
+  width: 54px; height: 54px;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  font-size: 1.3rem; cursor: pointer; transition: all 0.2s; z-index: 100;
+  box-shadow: 0 5px 25px rgba(0,0,0,0.4);
+}
+.btn-settings:hover { border-color: var(--aqua); box-shadow: 0 0 25px rgba(0,212,255,0.25); transform: rotate(30deg); }
+
+/* Modal */
+.modal-overlay { position: fixed; inset: 0; background: rgba(6,13,26,0.85); backdrop-filter: blur(10px); z-index: 200; display: none; align-items: flex-end; justify-content: center; padding: 0.5rem; }
+.modal-overlay.open { display: flex; }
+.modal-sheet {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 26px 26px 22px 22px; padding: 2rem 1.75rem calc(2rem + env(safe-area-inset-bottom));
+  width: 100%; max-width: 480px; max-height: 90vh; overflow-y: auto;
+  animation: sheetUp 0.32s cubic-bezier(0.25,0.46,0.45,0.94);
+}
+@keyframes sheetUp { from{transform:translateY(50px);opacity:0} to{transform:translateY(0);opacity:1} }
+.modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
+.modal-title { font-family: 'Bebas Neue', sans-serif; font-size: 1.6rem; letter-spacing: 3px; color: var(--aqua); }
+.btn-close { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; width: 34px; height: 34px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--text-dim); font-size: 1rem; transition: all 0.15s; }
+.btn-close:hover { color: var(--text); border-color: var(--aqua); }
+.divider { border: none; border-top: 1px solid var(--border); margin: 1.25rem 0; }
+.btn-save { width: 100%; background: linear-gradient(135deg, var(--aqua), var(--aqua2)); border: none; border-radius: 14px; padding: 0.9rem; font-family: 'Bebas Neue', sans-serif; font-size: 1.15rem; letter-spacing: 3px; color: #040c18; cursor: pointer; margin-top: 1.5rem; transition: all 0.15s; box-shadow: 0 4px 20px rgba(0,212,255,0.3); }
+.btn-save:hover { opacity: 0.92; transform: translateY(-1px); }
+.btn-danger { width: 100%; background: transparent; border: 1px solid rgba(255,107,107,0.3); border-radius: 12px; padding: 0.75rem; font-family: 'Nunito', sans-serif; font-size: 0.875rem; font-weight: 800; color: var(--accent); cursor: pointer; margin-top: 0.75rem; transition: all 0.15s; }
+.btn-danger:hover { background: rgba(255,107,107,0.1); border-color: var(--accent); }
+
+.notif-status { background: var(--surface2); border: 1px solid var(--border); border-radius: 12px; padding: 0.75rem 1rem; margin-top: 0.75rem; font-size: 0.78rem; color: var(--text-dim); }
+.notif-status .status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 6px; vertical-align: middle; }
+.status-dot.green { background: #4ade80; box-shadow: 0 0 8px rgba(74,222,128,0.5); }
+.status-dot.yellow { background: var(--gold); }
+.status-dot.red { background: var(--accent); }
+
+@media (max-width: 380px) {
+  .quick-add-grid { grid-template-columns: repeat(2, 1fr); }
+  .body-svg { width: 115px; }
+}
+</style>
+</head>
+<body>
+
+<div class="toast" id="toast"></div>
+
+<!-- ===== ONBOARDING ===== -->
+<div id="onboarding" class="screen active">
+  <div class="onboard-logo">HYDROME</div>
+  <div class="onboard-droplets"><span></span><span></span><span></span></div>
+
+  <div class="onboard-card">
+    <div class="step-label">Welcome · Setup</div>
+    <div class="step-title">Let's build your routine 💧</div>
+
+    <div class="form-group">
+      <div class="form-label">Choose your avatar</div>
+      <div class="gender-grid">
+        <button class="gender-btn selected" id="genderMale" onclick="selectGender('male')">
+          <span class="gender-icon">🧍‍♂️</span>Male
+        </button>
+        <button class="gender-btn" id="genderFemale" onclick="selectGender('female')">
+          <span class="gender-icon">🧍‍♀️</span>Female
+        </button>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Your first name</label>
+      <input type="text" class="form-input" id="inputName" placeholder="e.g. Alex" maxlength="20">
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Daily water goal</label>
+      <input type="number" class="form-input" id="inputGoal" placeholder="2500 ml" min="500" max="6000">
+      <div class="goal-presets">
+        <button class="goal-preset" onclick="setGoalPreset(1500)">1.5 L</button>
+        <button class="goal-preset" onclick="setGoalPreset(2000)">2 L</button>
+        <button class="goal-preset" onclick="setGoalPreset(2500)">2.5 L</button>
+        <button class="goal-preset" onclick="setGoalPreset(3000)">3 L</button>
+        <button class="goal-preset" onclick="setGoalPreset(3500)">3.5 L</button>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <div class="form-label">Reminder frequency</div>
+      <div class="reminder-options">
+        <div class="reminder-opt" id="rem10" onclick="selectReminder(10)">⏰ 10 min</div>
+        <div class="reminder-opt" id="rem20" onclick="selectReminder(20)">⏰ 20 min</div>
+        <div class="reminder-opt selected" id="rem30" onclick="selectReminder(30)">⏰ 30 min</div>
+        <div class="reminder-opt" id="rem60" onclick="selectReminder(60)">⏰ 1 hour</div>
+        <div class="reminder-opt" id="remOff" onclick="selectReminder(0)">🔕 Off</div>
+      </div>
+    </div>
+
+    <button class="btn-start" onclick="startApp()">START HYDRATING 💧</button>
+  </div>
+</div>
+
+<!-- ===== MAIN APP ===== -->
+<div id="app" class="screen">
+
+  <!-- iOS Add-to-Home banner -->
+  <div class="install-banner hidden" id="installBanner">
+    <div class="install-banner-text">
+      <strong>📱 Add to Home Screen for lock-screen alerts</strong>
+      <span>Tap the Share icon → "Add to Home Screen" in Safari</span>
+    </div>
+    <button class="btn-close-banner" onclick="document.getElementById('installBanner').classList.add('hidden')">✕</button>
+  </div>
+
+  <div class="topbar">
+    <div class="topbar-left">
+      <h1 id="appGreeting">HYDROME</h1>
+      <p id="appDate"></p>
+    </div>
+    <div class="streak-badge">
+      <div class="streak-num" id="streakNum">0</div>
+      <div class="streak-label">🔥 Day Streak</div>
+    </div>
+  </div>
+
+  <div class="goal-complete" id="goalBanner">
+    <div class="goal-complete-title">🎉 DAILY GOAL CRUSHED!</div>
+    <p>You've hit your hydration goal today. Keep it up!</p>
+  </div>
+
+  <!-- Body visual + stats -->
+  <div class="main-visual">
+    <div class="body-container">
+      <svg id="bodySvg" class="body-svg" viewBox="0 0 120 315" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <clipPath id="bodyClipMale">
+            <ellipse cx="60" cy="27" rx="17" ry="19"/>
+            <rect x="54" y="45" width="12" height="10"/>
+            <path d="M37 55 Q22 55 20 73 L16 133 Q15 144 24 145 L37 146 L31 228 L24 310 L53 310 L60 242 L67 310 L96 310 L89 228 L83 146 L96 145 Q105 144 104 133 L100 73 Q98 55 83 55 Z"/>
+            <path d="M37 56 L13 130 Q10 142 18 145 L27 143 L40 73 Z"/>
+            <path d="M83 56 L107 130 Q110 142 102 145 L93 143 L80 73 Z"/>
+          </clipPath>
+          <clipPath id="bodyClipFemale">
+            <ellipse cx="60" cy="27" rx="17" ry="19"/>
+            <rect x="54" y="45" width="12" height="10"/>
+            <path d="M37 55 Q22 55 19 73 L15 115 Q14 128 22 133 Q30 137 39 137 Q35 151 33 164 Q31 179 35 191 Q41 201 47 201 L41 310 L53 310 L60 242 L67 310 L79 310 L73 201 Q79 201 85 191 Q89 179 87 164 Q85 151 81 137 Q90 137 98 133 Q106 128 105 115 L101 73 Q98 55 83 55 Z"/>
+            <path d="M37 56 L12 127 Q9 139 17 142 L26 140 L39 73 Z"/>
+            <path d="M83 56 L108 127 Q111 139 103 142 L94 140 L81 73 Z"/>
+          </clipPath>
+          <linearGradient id="waterGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#48cae4" stop-opacity="0.92"/>
+            <stop offset="60%" stop-color="#0096c7" stop-opacity="0.88"/>
+            <stop offset="100%" stop-color="#0077b6" stop-opacity="0.95"/>
+          </linearGradient>
+          <linearGradient id="bodyGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#1a3558"/>
+            <stop offset="100%" stop-color="#0c1e34"/>
+          </linearGradient>
+        </defs>
+
+        <g id="maleOutline" fill="url(#bodyGrad)" stroke="#1e4a6e" stroke-width="1.5" stroke-linejoin="round">
+          <ellipse cx="60" cy="27" rx="17" ry="19"/>
+          <rect x="54" y="45" width="12" height="10" rx="2"/>
+          <path d="M37 55 Q22 55 20 73 L16 133 Q15 144 24 145 L37 146 L31 228 L24 310 L53 310 L60 242 L67 310 L96 310 L89 228 L83 146 L96 145 Q105 144 104 133 L100 73 Q98 55 83 55 Z"/>
+          <path d="M37 56 L13 130 Q10 142 18 145 L27 143 L40 73 Z"/>
+          <path d="M83 56 L107 130 Q110 142 102 145 L93 143 L80 73 Z"/>
+        </g>
+        <g id="femaleOutline" fill="url(#bodyGrad)" stroke="#1e4a6e" stroke-width="1.5" stroke-linejoin="round" style="display:none">
+          <ellipse cx="60" cy="27" rx="17" ry="19"/>
+          <rect x="54" y="45" width="12" height="10" rx="2"/>
+          <path d="M37 55 Q22 55 19 73 L15 115 Q14 128 22 133 Q30 137 39 137 Q35 151 33 164 Q31 179 35 191 Q41 201 47 201 L41 310 L53 310 L60 242 L67 310 L79 310 L73 201 Q79 201 85 191 Q89 179 87 164 Q85 151 81 137 Q90 137 98 133 Q106 128 105 115 L101 73 Q98 55 83 55 Z"/>
+          <path d="M37 56 L12 127 Q9 139 17 142 L26 140 L39 73 Z"/>
+          <path d="M83 56 L108 127 Q111 139 103 142 L94 140 L81 73 Z"/>
+          <path d="M44 22 Q43 4 60 4 Q77 4 76 22 Q72 10 60 10 Q48 10 44 22 Z" fill="#2a1a12" opacity="0.55" stroke="none"/>
+        </g>
+
+        <g id="waterGroup" clip-path="url(#bodyClipMale)">
+          <rect id="waterRect" class="water-fill-rect" x="-5" y="315" width="130" height="0" fill="url(#waterGrad)"/>
+          <g id="waveWrapper" transform="translate(0, 315)">
+            <path class="wave-anim" d="M0,0 Q15,-9 30,0 Q45,9 60,0 Q75,-9 90,0 Q105,9 120,0 Q135,-9 150,0 Q165,9 180,0 Q195,-9 210,0 Q225,9 240,0 L240,18 L0,18 Z" fill="url(#waterGrad)" opacity="0.75"/>
+          </g>
+        </g>
+
+        <g id="faceMale" opacity="0.7">
+          <ellipse cx="54" cy="25" rx="2.5" ry="3" fill="#90c8e8"/>
+          <ellipse cx="66" cy="25" rx="2.5" ry="3" fill="#90c8e8"/>
+          <path d="M55 32 Q60 36 65 32" stroke="#90c8e8" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+        </g>
+        <g id="faceFemale" opacity="0.7" style="display:none">
+          <ellipse cx="54" cy="25" rx="2.5" ry="3" fill="#f0b8cf"/>
+          <ellipse cx="66" cy="25" rx="2.5" ry="3" fill="#f0b8cf"/>
+          <path d="M55 32 Q60 37 65 32" stroke="#f0b8cf" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+          <line x1="52" y1="23" x2="50" y2="21" stroke="#f0b8cf" stroke-width="1" stroke-linecap="round"/>
+          <line x1="55" y1="22" x2="54" y2="20" stroke="#f0b8cf" stroke-width="1" stroke-linecap="round"/>
+          <line x1="65" y1="22" x2="64" y2="20" stroke="#f0b8cf" stroke-width="1" stroke-linecap="round"/>
+          <line x1="68" y1="23" x2="70" y2="21" stroke="#f0b8cf" stroke-width="1" stroke-linecap="round"/>
+        </g>
+
+        <text id="pctTextSvg" x="60" y="200" text-anchor="middle" font-family="'Bebas Neue', sans-serif" font-size="20" fill="white" opacity="0" paint-order="stroke" stroke="rgba(0,0,0,0.3)" stroke-width="3">0%</text>
+      </svg>
+    </div>
+
+    <div class="stats-panel">
+      <div class="stat-card"><div class="stat-value" id="statConsumed">0</div><div class="stat-label">ml consumed</div></div>
+      <div class="stat-card"><div class="stat-value" id="statRemaining">—</div><div class="stat-label">ml remaining</div></div>
+      <div class="stat-card"><div class="stat-value" id="statCups">0</div><div class="stat-label">cups today</div></div>
+      <div class="stat-card"><div class="stat-value" id="statGoalDisp">—</div><div class="stat-label">daily goal</div></div>
+    </div>
+  </div>
+
+  <div class="progress-section">
+    <div class="progress-top">
+      <span class="progress-title">Today's Hydration</span>
+      <span class="pct-label" id="pctLabel">0%</span>
+    </div>
+    <div class="progress-bar-wrap">
+      <div class="progress-bar-fill" id="progressBar" style="width:0%"></div>
+    </div>
+    <div class="progress-footer">
+      <span id="labelConsumed">0 ml consumed</span>
+      <span id="labelGoal">Goal: — ml</span>
+    </div>
+  </div>
+
+  <div class="section-title">Quick Add</div>
+  <div class="quick-add-grid">
+    <button class="quick-btn" onclick="addWater(100)"><span class="qb-icon">🥃</span><span class="qb-amount">100</span><span class="qb-unit">ml</span></button>
+    <button class="quick-btn" onclick="addWater(200)"><span class="qb-icon">🥛</span><span class="qb-amount">200</span><span class="qb-unit">ml</span></button>
+    <button class="quick-btn" onclick="addWater(250)"><span class="qb-icon">🍵</span><span class="qb-amount">250</span><span class="qb-unit">ml</span></button>
+    <button class="quick-btn" onclick="addWater(500)"><span class="qb-icon">🍶</span><span class="qb-amount">500</span><span class="qb-unit">ml</span></button>
+  </div>
+
+  <div class="custom-add-row">
+    <input type="number" class="custom-input" id="customAmount" placeholder="Custom ml amount..." min="1" max="2000">
+    <button class="btn-add" onclick="addCustom()">+ ADD</button>
+  </div>
+
+  <!-- Reminder card -->
+  <div class="reminder-card">
+    <div class="reminder-card-top">
+      <div class="reminder-info">
+        <h3>💧 Drink Reminders</h3>
+        <p id="reminderStatus">Off — tap toggle to enable</p>
+      </div>
+      <label class="toggle">
+        <input type="checkbox" id="reminderToggle" onchange="toggleReminder()">
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+    <div class="reminder-interval-row">
+      <button class="rem-interval-btn" id="btn10min" onclick="changeInterval(10)">10 min</button>
+      <button class="rem-interval-btn" id="btn20min" onclick="changeInterval(20)">20 min</button>
+      <button class="rem-interval-btn active" id="btn30min" onclick="changeInterval(30)">30 min</button>
+      <button class="rem-interval-btn" id="btn60min" onclick="changeInterval(60)">1 hour</button>
+    </div>
+    <div class="reminder-interval-row" style="margin-top:0.5rem;">
+      <button class="rem-interval-btn" style="background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;border:none;font-weight:900;" onclick="testNotification()">🧪 Test Now</button>
+    </div>
+    <div class="notif-status" id="notifStatus">
+      <span class="status-dot yellow" id="notifDot"></span>
+      <span id="notifStatusText">Checking notification support…</span>
+    </div>
+  </div>
+
+  <div class="section-title">Today's Log</div>
+  <div class="log-list" id="logList">
+    <div class="empty-log"><span class="empty-log-icon">🫗</span>No entries yet — add your first sip!</div>
+  </div>
+
+  <button class="btn-settings" onclick="openSettings()" title="Settings">⚙️</button>
+</div>
+
+<!-- ===== SETTINGS MODAL ===== -->
+<div class="modal-overlay" id="settingsModal">
+  <div class="modal-sheet">
+    <div class="modal-header">
+      <div class="modal-title">SETTINGS</div>
+      <button class="btn-close" onclick="closeSettings()">✕</button>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Name</label>
+      <input type="text" class="form-input" id="settingName" maxlength="20">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Daily Goal (ml)</label>
+      <input type="number" class="form-input" id="settingGoal" min="500" max="6000">
+      <div class="goal-presets" style="margin-top:0.625rem">
+        <button class="goal-preset" onclick="document.getElementById('settingGoal').value=1500">1.5L</button>
+        <button class="goal-preset" onclick="document.getElementById('settingGoal').value=2000">2L</button>
+        <button class="goal-preset" onclick="document.getElementById('settingGoal').value=2500">2.5L</button>
+        <button class="goal-preset" onclick="document.getElementById('settingGoal').value=3000">3L</button>
+        <button class="goal-preset" onclick="document.getElementById('settingGoal').value=3500">3.5L</button>
+      </div>
+    </div>
+    <div class="form-group">
+      <div class="form-label">Avatar</div>
+      <div class="gender-grid">
+        <button class="gender-btn" id="settingMale" onclick="settingGender('male')"><span class="gender-icon">🧍‍♂️</span>Male</button>
+        <button class="gender-btn" id="settingFemale" onclick="settingGender('female')"><span class="gender-icon">🧍‍♀️</span>Female</button>
+      </div>
+    </div>
+
+    <hr class="divider">
+    <button class="btn-save" onclick="saveSettings()">SAVE CHANGES</button>
+    <button class="btn-danger" onclick="resetDay()">🔄 Reset Today's Intake</button>
+    <button class="btn-danger" onclick="fullReset()">⚠️ Full Reset — Clear Everything</button>
+  </div>
+</div>
+
+<script>
+// ─── STATE ────────────────────────────────────────────────────────────────────
+let state = {
+  name: '', gender: 'male', goal: 2500,
+  reminderInterval: 30, reminderEnabled: false,
+  todayIntake: 0, log: [], streak: 0, lastDate: '',
+  userId: null, pushSubscription: null,
+};
+
+const SVG_BOTTOM = 315, SVG_TOP = 8, SVG_HEIGHT = 307;
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+function init() {
+  const saved = localStorage.getItem('hydrome_pwa');
+  if (saved) {
+    try { state = { ...state, ...JSON.parse(saved) }; } catch(e) {}
+    checkNewDay();
+    showApp();
+  } else {
+    showScreen('onboarding');
+  }
+  registerSW();
+  listenSWMessages();
+
+  // Handle URL action param (from notification click)
+  const params = new URLSearchParams(location.search);
+  if (params.get('action') === 'add250' && saved) addWater(250);
+}
+
+function getDateStr(d) {
+  d = d || new Date();
+  return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+}
+
+function checkNewDay() {
+  const today = getDateStr();
+  if (state.lastDate && state.lastDate !== today) {
+    const prev = new Date(); prev.setDate(prev.getDate() - 1);
+    if (state.lastDate === getDateStr(prev)) {
+      if (state.todayIntake >= state.goal) state.streak++;
+    } else {
+      state.streak = 0;
+    }
+    state.todayIntake = 0; state.log = [];
+  }
+  state.lastDate = today;
+  if (!state.userId) state.userId = 'u_' + Math.random().toString(36).slice(2,10);
+  save();
+}
+
+function save() { localStorage.setItem('hydrome_pwa', JSON.stringify(state)); }
+
+// ─── SERVICE WORKER ───────────────────────────────────────────────────────────
+async function registerSW() {
+  if (!('serviceWorker' in navigator)) return;
+  try {
+    await navigator.serviceWorker.register('/sw.js');
+  } catch(e) { console.warn('SW registration failed', e); }
+}
+
+function listenSWMessages() {
+  navigator.serviceWorker?.addEventListener('message', e => {
+    if (e.data?.action === 'add250') addWater(250);
+  });
+}
+
+// ─── SCREENS ─────────────────────────────────────────────────────────────────
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => { s.classList.remove('active'); s.style.display = ''; });
+  const el = document.getElementById(id);
+  el.classList.add('active');
+  if (id === 'onboarding') el.style.display = 'flex';
+}
+
+// ─── ONBOARDING ───────────────────────────────────────────────────────────────
+let selGender = 'male', selReminder = 30;
+function selectGender(g) {
+  selGender = g;
+  document.getElementById('genderMale').classList.toggle('selected', g === 'male');
+  document.getElementById('genderFemale').classList.toggle('selected', g === 'female');
+}
+function setGoalPreset(v) { document.getElementById('inputGoal').value = v; }
+function selectReminder(m) {
+  selReminder = m;
+  ['rem10','rem20','rem30','rem60','remOff'].forEach(id => document.getElementById(id).classList.remove('selected'));
+  if (m === 10) document.getElementById('rem10').classList.add('selected');
+  else if (m === 20) document.getElementById('rem20').classList.add('selected');
+  else if (m === 30) document.getElementById('rem30').classList.add('selected');
+  else if (m === 60) document.getElementById('rem60').classList.add('selected');
+  else document.getElementById('remOff').classList.add('selected');
+}
+
+async function startApp() {
+  const name = document.getElementById('inputName').value.trim();
+  const goal = parseInt(document.getElementById('inputGoal').value) || 2500;
+  if (!name) { showToast('Enter your name first 👋'); return; }
+  state.name = name; state.gender = selGender; state.goal = goal;
+  state.reminderInterval = selReminder; state.lastDate = getDateStr();
+  state.userId = state.userId || 'u_' + Math.random().toString(36).slice(2,10);
+  if (!state.log) state.log = [];
+  save();
+  showApp();
+  if (selReminder > 0) {
+    // Ask for permissions after showing the app
+    setTimeout(() => enableReminders(), 800);
+  }
+}
+
+// ─── APP ─────────────────────────────────────────────────────────────────────
+function showApp() {
+  showScreen('app');
+  updateGenderUI(); updateUI(); updateReminderUI(); updateNotifStatus();
+  const now = new Date();
+  document.getElementById('appDate').textContent = now.toLocaleDateString('en-US', { weekday:'long', month:'long', day:'numeric' });
+  document.getElementById('appGreeting').textContent = `HI, ${(state.name||'FRIEND').toUpperCase()} 👋`;
+  document.getElementById('settingName').value = state.name;
+  document.getElementById('settingGoal').value = state.goal;
+  updateSettingGenderUI();
+  checkShowInstallBanner();
+}
+
+function checkShowInstallBanner() {
+  // Show iOS install hint if on Safari/iOS and not already standalone
+  const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  const isStandalone = window.navigator.standalone === true;
+  const dismissed = localStorage.getItem('install_banner_dismissed');
+  if (isIOS && !isStandalone && !dismissed) {
+    document.getElementById('installBanner').classList.remove('hidden');
+  }
+}
+
+function updateGenderUI() {
+  const male = state.gender === 'male';
+  document.getElementById('maleOutline').style.display = male ? '' : 'none';
+  document.getElementById('femaleOutline').style.display = male ? 'none' : '';
+  document.getElementById('faceMale').style.display = male ? '' : 'none';
+  document.getElementById('faceFemale').style.display = male ? 'none' : '';
+  document.getElementById('waterGroup').setAttribute('clip-path', `url(#bodyClip${male ? 'Male' : 'Female'})`);
+}
+
+function updateUI() {
+  const raw = Math.min(state.todayIntake / state.goal, 1);
+  const pct = Math.round(raw * 100);
+  const remaining = Math.max(0, state.goal - state.todayIntake);
+  document.getElementById('statConsumed').textContent = state.todayIntake.toLocaleString();
+  document.getElementById('statRemaining').textContent = remaining.toLocaleString();
+  document.getElementById('statCups').textContent = state.log.length;
+  document.getElementById('statGoalDisp').textContent = state.goal >= 1000 ? (state.goal/1000).toFixed(1) + 'L' : state.goal + 'ml';
+  document.getElementById('streakNum').textContent = state.streak;
+  document.getElementById('progressBar').style.width = pct + '%';
+  document.getElementById('pctLabel').textContent = pct + '%';
+  document.getElementById('labelConsumed').textContent = state.todayIntake + ' ml consumed';
+  document.getElementById('labelGoal').textContent = 'Goal: ' + state.goal + ' ml';
+  updateBodyFill(raw, pct);
+  document.getElementById('goalBanner').classList.toggle('visible', raw >= 1);
+  renderLog();
+}
+
+function updateBodyFill(ratio, pct) {
+  const fillPx = Math.round(SVG_HEIGHT * ratio);
+  const fillY  = SVG_BOTTOM - fillPx;
+  const rect   = document.getElementById('waterRect');
+  rect.setAttribute('y', fillY);
+  rect.setAttribute('height', fillPx + 12);
+  document.getElementById('waveWrapper').setAttribute('transform', `translate(0, ${fillY - 10})`);
+  const txt = document.getElementById('pctTextSvg');
+  txt.setAttribute('y', Math.min(Math.max(fillY + 22, 55), 280));
+  txt.textContent = pct + '%';
+  txt.setAttribute('opacity', ratio > 0.04 ? '1' : '0');
+}
+
+// ─── ADD WATER ────────────────────────────────────────────────────────────────
+function addWater(ml) {
+  const wasBelow = state.todayIntake < state.goal;
+  state.todayIntake += ml;
+  const now = new Date();
+  state.log.push({ ml, time: now.toLocaleTimeString('en-US', { hour:'2-digit', minute:'2-digit' }) });
+  if (wasBelow && state.todayIntake >= state.goal) {
+    showToast(`🎉 GOAL REACHED! Amazing, ${state.name}!`);
+    state.streak = Math.max(state.streak, 1);
+  } else {
+    showToast(`💧 +${ml} ml added`);
+  }
+  save(); updateUI();
+  // Update server prefs if subscribed
+  if (state.pushSubscription) updateServerPrefs();
+}
+
+function addCustom() {
+  const input = document.getElementById('customAmount');
+  const ml = parseInt(input.value);
+  if (!ml || ml < 1) { showToast('Enter a valid amount'); return; }
+  if (ml > 2000) { showToast('Max 2000 ml per entry'); return; }
+  input.value = ''; addWater(ml);
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('customAmount')?.addEventListener('keydown', e => { if(e.key==='Enter') addCustom(); });
+});
+
+// ─── LOG ─────────────────────────────────────────────────────────────────────
+function renderLog() {
+  const list = document.getElementById('logList');
+  if (!state.log || !state.log.length) {
+    list.innerHTML = `<div class="empty-log"><span class="empty-log-icon">🫗</span>No entries yet — add your first sip!</div>`;
+    return;
+  }
+  list.innerHTML = [...state.log].reverse().map((e, ri) => {
+    const idx  = state.log.length - 1 - ri;
+    const icon = e.ml <= 150 ? '🥃' : e.ml <= 250 ? '🥛' : e.ml <= 400 ? '🍵' : '🍶';
+    return `<div class="log-entry">
+      <div class="log-left"><span class="log-icon">${icon}</span><span class="log-time">${e.time}</span></div>
+      <div class="log-right"><span class="log-amount">+${e.ml}</span><span class="log-ml"> ml</span>
+        <button class="log-delete" onclick="deleteEntry(${idx})">🗑</button></div>
+    </div>`;
+  }).join('');
+}
+
+function deleteEntry(idx) {
+  const { ml } = state.log[idx];
+  state.todayIntake = Math.max(0, state.todayIntake - ml);
+  state.log.splice(idx, 1);
+  save(); updateUI(); showToast(`Removed ${ml} ml`);
+}
+
+// ─── PUSH NOTIFICATIONS ───────────────────────────────────────────────────────
+function urlBase64ToUint8Array(base64String) {
+  const padding = '='.repeat((4 - base64String.length % 4) % 4);
+  const base64  = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+  const rawData = atob(base64);
+  return new Uint8Array([...rawData].map(c => c.charCodeAt(0)));
+}
+
+async function enableReminders() {
+  if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+    showToast('⚠️ Push not supported in this browser');
+    updateNotifStatus(); return;
+  }
+  // Notifications only work in standalone PWA on iOS
+  const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  const isStandalone = window.navigator.standalone === true;
+  if (isIOS && !isStandalone) {
+    showToast('📱 Add to Home Screen first for push alerts!');
+    updateNotifStatus(); return;
+  }
+
+  const perm = await Notification.requestPermission();
+  if (perm !== 'granted') {
+    showToast('❌ Notifications blocked — enable in iPhone Settings');
+    updateNotifStatus(); return;
+  }
+
+  try {
+    // Get VAPID public key from our server
+    const keyRes  = await fetch('/vapid-public-key');
+    const { key } = await keyRes.json();
+
+    const reg = await navigator.serviceWorker.ready;
+    let sub   = await reg.pushManager.getSubscription();
+    if (!sub) {
+      sub = await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(key)
+      });
+    }
+
+    state.pushSubscription = JSON.parse(JSON.stringify(sub));
+    save();
+
+    // Register with our server
+    await fetch('/subscribe', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        subscription: sub.toJSON ? sub.toJSON() : JSON.parse(JSON.stringify(sub)),
+        userId:   state.userId,
+        interval: state.reminderInterval,
+        goal:     state.goal
+      })
+    });
+
+    state.reminderEnabled = true;
+    save(); updateReminderUI(); updateNotifStatus();
+    showToast(`🔔 Reminders every ${state.reminderInterval} min!`);
+  } catch(err) {
+    console.error('Push subscribe error:', err);
+    showToast('Push setup failed — check console');
+    updateNotifStatus();
+  }
+}
+
+async function disableReminders() {
+  state.reminderEnabled = false;
+  if (state.userId) {
+    try { await fetch('/unsubscribe', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ userId: state.userId }) }); }
+    catch(e) {}
+  }
+  save(); updateReminderUI(); updateNotifStatus();
+  showToast('🔕 Reminders paused');
+}
+
+async function updateServerPrefs() {
+  if (!state.userId || !state.reminderEnabled) return;
+  try {
+    await fetch('/update-prefs', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId: state.userId, interval: state.reminderInterval, goal: state.goal, active: state.reminderEnabled })
+    });
+  } catch(e) {}
+}
+
+function toggleReminder() {
+  const on = document.getElementById('reminderToggle').checked;
+  if (on) enableReminders();
+  else    disableReminders();
+}
+
+function changeInterval(mins) {
+  state.reminderInterval = mins;
+  document.getElementById('btn10min').classList.toggle('active', mins === 10);
+  document.getElementById('btn20min').classList.toggle('active', mins === 20);
+  document.getElementById('btn30min').classList.toggle('active', mins === 30);
+  document.getElementById('btn60min').classList.toggle('active', mins === 60);
+  save(); updateServerPrefs();
+  showToast(state.reminderEnabled ? `⏰ Every ${mins} min` : `Interval set to ${mins} min`);
+}
+
+function updateReminderUI() {
+  const tog = document.getElementById('reminderToggle');
+  if (tog) tog.checked = !!state.reminderEnabled;
+  document.getElementById('btn10min').classList.toggle('active', state.reminderInterval === 10);
+  document.getElementById('btn20min').classList.toggle('active', state.reminderInterval === 20);
+  document.getElementById('btn30min').classList.toggle('active', state.reminderInterval === 30);
+  document.getElementById('btn60min').classList.toggle('active', state.reminderInterval === 60);
+  const s = document.getElementById('reminderStatus');
+  if (s) {
+    s.textContent = state.reminderEnabled ? `Every ${state.reminderInterval} min` : 'Off — tap toggle to enable';
+    s.style.color = state.reminderEnabled ? 'var(--aqua2)' : '';
+  }
+}
+
+async function testNotification() {
+  if (!('Notification' in window)) {
+    showToast('❌ Notifications not supported');
+    return;
+  }
+
+  const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  const isStandalone = window.navigator.standalone === true;
+
+  if (isIOS && !isStandalone) {
+    showToast('📱 Add to Home Screen first (iOS requirement)');
+    return;
+  }
+
+  if (Notification.permission !== 'granted') {
+    const perm = await Notification.requestPermission();
+    if (perm !== 'granted') {
+      showToast('❌ Please allow notifications');
+      return;
+    }
+  }
+
+  // Send test notification
+  if (state.userId && state.pushSubscription) {
+    // Try server push first (more reliable)
+    try {
+      const res = await fetch(`/test-push/${state.userId}`, { method: 'POST' });
+      if (res.ok) {
+        showToast('🧪 Test notification sent!');
+        return;
+      }
+    } catch(e) {
+      console.log('Server push failed, using local notification:', e);
+    }
+  }
+
+  // Fallback to local notification
+  try {
+    const notification = new Notification('💧 HydroMe Test', {
+      body: 'Great! Your notifications are working perfectly!',
+      icon: '/icon-192.png',
+      badge: '/icon-96.png',
+      tag: 'hydrome-test',
+      vibrate: [200, 100, 200],
+      requireInteraction: false
+    });
+    
+    notification.onclick = () => {
+      window.focus();
+      notification.close();
+    };
+
+    showToast('✅ Test notification sent!');
+  } catch(err) {
+    console.error('Local notification failed:', err);
+    showToast('⚠️ Notification error - check console');
+  }
+}
+
+function updateNotifStatus() {
+  const dot  = document.getElementById('notifDot');
+  const text = document.getElementById('notifStatusText');
+  if (!dot || !text) return;
+
+  const isIOS        = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  const isStandalone = window.navigator.standalone === true;
+  const hasPush      = 'PushManager' in window && 'serviceWorker' in navigator;
+
+  if (!hasPush) {
+    dot.className  = 'status-dot red';
+    text.textContent = 'Push not supported in this browser';
+  } else if (isIOS && !isStandalone) {
+    dot.className  = 'status-dot yellow';
+    text.textContent = '📱 Add to Home Screen in Safari for lock-screen alerts';
+  } else if (Notification.permission === 'denied') {
+    dot.className  = 'status-dot red';
+    text.textContent = 'Notifications blocked — enable in iPhone Settings → Notifications';
+  } else if (state.reminderEnabled && state.pushSubscription) {
+    dot.className  = 'status-dot green';
+    text.textContent = `✅ Active — alerts every ${state.reminderInterval} min`;
+  } else {
+    dot.className  = 'status-dot yellow';
+    text.textContent = 'Toggle on to activate push alerts';
+  }
+}
+
+// ─── SETTINGS MODAL ──────────────────────────────────────────────────────────
+function openSettings() {
+  document.getElementById('settingName').value = state.name;
+  document.getElementById('settingGoal').value = state.goal;
+  updateSettingGenderUI();
+  document.getElementById('settingsModal').classList.add('open');
+}
+function closeSettings() { document.getElementById('settingsModal').classList.remove('open'); }
+function settingGender(g) { state.gender = g; updateSettingGenderUI(); }
+function updateSettingGenderUI() {
+  document.getElementById('settingMale').classList.toggle('selected', state.gender === 'male');
+  document.getElementById('settingFemale').classList.toggle('selected', state.gender === 'female');
+}
+function saveSettings() {
+  const name = document.getElementById('settingName').value.trim();
+  const goal = parseInt(document.getElementById('settingGoal').value);
+  if (!name) { showToast('Name cannot be empty'); return; }
+  if (!goal || goal < 500) { showToast('Goal must be at least 500 ml'); return; }
+  state.name = name; state.goal = goal;
+  save(); closeSettings(); showApp();
+  updateServerPrefs(); showToast('✅ Settings saved!');
+}
+function resetDay() {
+  if (!confirm("Reset today's water intake to zero?")) return;
+  state.todayIntake = 0; state.log = [];
+  save(); updateUI(); closeSettings(); showToast('🔄 Today reset');
+}
+function fullReset() {
+  if (!confirm('Delete ALL data and start fresh?')) return;
+  localStorage.clear(); location.reload();
+}
+document.getElementById('settingsModal').addEventListener('click', function(e) { if (e.target === this) closeSettings(); });
+
+// ─── TOAST ────────────────────────────────────────────────────────────────────
+let toastT;
+function showToast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.classList.add('show');
+  clearTimeout(toastT); toastT = setTimeout(() => el.classList.remove('show'), 2600);
+}
+
+// ─── BOOT ─────────────────────────────────────────────────────────────────────
+init();
+</script>
+</body>
+</html>

@@ -1,0 +1,36 @@
+{
+  "name": "HydroMe – Water Tracker",
+  "short_name": "HydroMe",
+  "description": "Track your daily water intake with customizable reminders - Works on iOS and Android",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#060d1a",
+  "theme_color": "#00d4ff",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/icon-96.png",
+      "sizes": "96x96",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["health", "lifestyle"],
+  "screenshots": [],
+  "prefer_related_applications": false,
+  "lang": "en",
+  "dir": "ltr"
+}
