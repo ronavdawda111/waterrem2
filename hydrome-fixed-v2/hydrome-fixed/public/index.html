@@ -895,9 +895,13 @@ async function enableReminders() {
     state.reminderEnabled = true;
     save(); updateReminderUI(); updateNotifStatus();
     showToast(`🔔 Reminders every ${state.reminderInterval} min!`);
+    
+    // Note: We don't send test push here anymore - just subscribe
+    // Test push can be done manually via "Test Now" button
+    // Automatic notifications will be sent by server cron
   } catch(err) {
     console.error('Push subscribe error:', err);
-    showToast('Push setup failed — check console');
+    showToast('⚠️ Push setup error: ' + err.message);
     updateNotifStatus();
   }
 }
